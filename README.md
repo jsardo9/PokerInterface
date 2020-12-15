@@ -1,2 +1,2 @@
 # PokerInterface
- Texas Hold'em interface for multiple AI and human players to play at a single table.
+ A Texas Hold'em interface with compatability for multiple AI and human players at a single table.
