@@ -1,0 +1,312 @@
+import java.util.*;
+
+public class Table
+{
+
+  
+  private Player[] players;//NEVER LEAVE AN EMPTY SPOT
+  private int pot = 0;
+  private int bigBlind;
+  private Card[] deck = new Card[52];
+  private int dealer; // 0 is yourself rotates clockwise around
+  private int activeSeat;
+  private int call = 0;  //the maximum amount bet by anyone
+  private int deckPlace = 0;  //index of next card in deck to be dealt
+  private Card[] board = new Card[5];
+  private TextDisplay display;
+  private boolean showDown;  //true if we're in the showdown, so that strategies can see players' hands
+  
+  public Table(int numPlayers, int dealer, int bigBlind)
+  {
+    this.bigBlind = bigBlind;
+    players = new Player[numPlayers]; //Never any empty seats
+    this.dealer = dealer;
+    
+    for(int i = 0; i < 5; i++) //creates board
+    {
+      board[i] = null;
+    }
+    
+    int index = 0; //fills deck
+    for(int suit = 0; suit < 4; suit++)
+    {
+      for(int rank = 2; rank < 15; rank++)
+      {
+        deck[index] = new Card(rank,suit);
+        index++;
+      }
+    }
+  }
+
+  public void shuffle()
+  {
+    for(int i = 0; i < 52; i++)
+    {
+      int index = (int)(Math.random() * (52 - i));
+      Card placeHolder = deck[index];
+      deck[index] = deck[51 - i];
+      deck[51 - i] = placeHolder;
+    }
+  }
+  
+  public void setDisplay(TextDisplay display)
+  {
+    this.display = display;
+  }
+  
+  public void round()
+  { 
+    if (players.length < 2)
+      throw new RuntimeException("not enough players to play:  " + players.length);
+   
+    activeSeat = (dealer + 1) % players.length; //active player is small blind
+    blinds(); 
+    //activeSeat is now one after big blind
+    shuffle();
+    deal(); //deal always starts from position 0
+    bet(true); //Preflop || not yet tested
+    
+    if (getNumActivePlayers() > 1) //Flop
+    {
+      for (int i = 0; i < 3; i++)
+      {
+        board[i] = deck[deckPlace];
+        deckPlace++;
+      }
+        bet(false);
+    } 
+    if (getNumActivePlayers() > 1) //Turn
+    {
+        board[3] = deck[deckPlace];
+        deckPlace++;  
+        bet(false);
+    }
+     if (getNumActivePlayers() > 1) //River
+    {
+        board[4] = deck[deckPlace];
+        deckPlace++;  
+        bet(false);
+    }
+    
+    showDown = true;
+    if (display != null) display.update();
+    showDown = false;
+    
+    ArrayList<Integer> winningSeats = new ArrayList<Integer>();
+    for (int i = 0; i < players.length; i++)
+    {
+      Player p = players[i];
+      if(!p.hasFolded())
+      {
+        p.setHandCategory(board);// this sets showdownhand also
+        if (winningSeats.size() == 0)
+          winningSeats.add(i);
+        else
+        {
+          int cat1 = p.getHandCategory();
+          int cat2 = players[winningSeats.get(0)].getHandCategory();
+          int winner = PokerUtil.getWinner(cat1, p.getShowDownHand(),
+                                           cat2,
+                                           players[winningSeats.get(0)].getShowDownHand());
+          if (winner == 1) //player's hand is better
+          {
+            winningSeats = new ArrayList<Integer>();
+            winningSeats.add(i);
+          }
+          else if (winner == 0)  //tie
+            winningSeats.add(i);
+        }
+      }
+    }
+    
+    int winnings = pot/winningSeats.size();
+    for(int i = 0; i < winningSeats.size(); i++)
+      players[winningSeats.get(i)].addChips(winnings);
+    pot = 0;
+    
+    if (display != null) display.update();
+
+    //notify players that round has ended before resetting all for next round
+    for (int i = 0; i < players.length; i++)
+    {
+      if (players[i] != null)
+        players[i].roundEnded();
+    }
+        
+    deckPlace = 0;
+    for (int i = 0; i < 5; i++)
+      board[i] = null;
+    dealer = (dealer + 1)%players.length;
+    
+    for (Player p : players)
+    {
+        p.unFold();
+    }
+  }
+  
+  public void blinds()
+  {
+    players[activeSeat].removeChips(bigBlind / 2);
+    players[activeSeat].setBet(bigBlind / 2);
+    players[(activeSeat + 1) % players.length].removeChips(bigBlind);
+    players[(activeSeat + 1) % players.length].setBet(bigBlind);
+    activeSeat = (activeSeat + 2) % players.length;
+  }
+  
+  public int getNumActivePlayers()
+  {
+    int left = 0;
+    for (Player p : players)
+    {
+      if(!p.hasFolded())
+        left++;
+    }
+    return left;
+  }
+  
+  public void deal()
+  {
+    for (int seat = 0; seat < players.length; seat++)
+    {
+      
+        Card[] hand = new Card[2];
+        for(int i = 0; i < 2; i++)
+        {
+          hand[i] = deck[deckPlace];
+          deckPlace++;
+        }
+        //int handCategory = PokerUtil.evaluateHand(hand);
+        players[seat].setHand(hand);
+        players[seat].deal(seat, this);
+      
+    }
+  }
+  
+  public void bet(boolean preflop)
+  {
+    call = 0;  //biggest bet is 0 so far
+    int called = 0;  //number of players who have called the biggest bet
+    if (preflop)
+      call = bigBlind;
+    int playersLeft = getNumActivePlayers();
+    while(called < playersLeft && playersLeft > 1)
+    {
+      Player activePlayer = players[activeSeat];
+      if (!activePlayer.hasFolded())
+      {
+        if (display != null) display.update();
+        int option = activePlayer.act();
+        if(option == Strategy.FOLD) //Player Folded
+        {
+            activePlayer.fold();
+            playersLeft--;
+        }
+        else if(option > (call - activePlayer.getBet())) //Player Raised
+        {
+            call = activePlayer.getBet() + option;
+            activePlayer.removeChips(option);
+            activePlayer.setBet(activePlayer.getBet() + option);
+            called = 1;
+          
+        }
+        else if(option == (call - activePlayer.getBet())) //Player Called
+        {
+          activePlayer.removeChips(call - activePlayer.getBet());
+          activePlayer.setBet(call);
+          called++;
+        }
+        else
+          throw new RuntimeException("illegal action: probably bet less than the call");
+      }
+      activeSeat = (activeSeat + 1) % players.length;
+    }
+    
+    if (display != null) display.update();
+    
+    activeSeat = (dealer + 1) % players.length;
+    
+    for (Player p : players)
+    {
+        pot += p.getBet();// collects all bets into pot
+        p.setBet(0);
+    }
+  }
+  
+
+  public void setPlayer(int seat, Player player)
+  {
+    players[seat] = player;
+  }
+  
+  public int getActiveSeat()
+  {
+    return activeSeat;
+  }
+  
+  public int getPot()
+  {
+    return pot;
+  }
+  
+  public Card[] getBoard()
+  {
+    return board;
+  }
+  
+  public int getDealer()
+  {
+    return dealer;
+  }
+  
+  public int getCall()
+  {
+    return call;
+  }
+  
+  public int getBigBlind()
+  {
+    return bigBlind;
+  }
+  
+  public int getSize()
+  {
+    return players.length;
+  }
+  
+  public Player getPlayer(int seat)
+  {
+    return players[seat];
+  }
+  
+  public String toString()
+  {
+    String s = "board: " + PokerUtil.handToString(board) + "\n";
+     s += "pot:  " + pot + "\n";
+    for (int seat = players.length - 1; seat >= 0; seat--)//cycles backwards through players
+    {
+        if (seat == dealer)
+          s += " D";
+        else if (seat == (dealer + 1) % players.length)
+           s += "sb";
+        else if (seat == (dealer + 2) % players.length)
+         s += "bb";
+        else
+          s += "  ";
+        if (seat == activeSeat)
+          s += "*";
+        else 
+          s += " ";
+        s += seat + ":";
+        s += players[seat];
+        s += "\n";
+    }
+    return s;
+  }
+  
+
+  
+  public boolean showDown()
+  {
+    return showDown;
+  }
+}

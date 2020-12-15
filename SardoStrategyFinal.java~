@@ -1,0 +1,230 @@
+public class SardoStrategyFinal implements Strategy
+{
+  private TableView table;
+  private Card[] myHand;
+  private int mySeat;
+  private int dealerSeat;
+  private int handCat;
+  private int handValue;
+  private int numPlayers;
+  private int currentPlayers;
+  private boolean exchanged;
+  private boolean firstBetP3;
+  private int preHandStack;
+  private int[] cardsExchangedNormCat;
+  private int mltAnte;
+  private int mltOppons;
+  private int roundsWon;
+
+ public SardoStrategyFinal()
+ {
+   cardsExchangedNormCat = new int[6];
+   cardsExchangedNormCat[0] = HIGH_CARD;
+   cardsExchangedNormCat[1] = HIGH_CARD;
+   cardsExchangedNormCat[2] = HIGH_CARD;
+   cardsExchangedNormCat[3] = PAIR;
+   cardsExchangedNormCat[4] = HIGH_CARD;
+   cardsExchangedNormCat[5] = HIGH_CARD;
+   roundsWon = 0;
+   mltAnte = 0;
+   mltOppons = 0;
+ } 
+ 
+ public void deal(int seat, int handCategory, Card[] hand, TableView tableView)
+ {
+   table=tableView;
+   myHand = hand;
+   handCat=handCategory;
+   handValue=(handCategory * 14) + hand[0].getRank() - 1; //7 - 125 //potentially make bigger in the future
+   mySeat=seat;
+   dealerSeat=table.getDealer();           
+   int players = 0;
+    for (int i = 0; i < table.getSize(); i++)
+    {
+      if(!table.isEmpty(i))
+        players++;
+    }
+   numPlayers = players;
+   currentPlayers=numPlayers;  
+   exchanged=false;
+   firstBetP3=true;
+   preHandStack=table.getStack(mySeat) + 1;
+ }
+ 
+ public int act()
+ {
+   int players = 0;
+    for (int i = 0; i < table.getSize(); i++)
+    {
+      if(!table.isEmpty(i) && !table.hasFolded(i))
+        players++;
+    }
+    currentPlayers = players;
+    
+   if (!exchanged)
+   {
+     if (handCat > 1)
+       return 2;
+     
+     if (handCat > 0 && myHand[1].getRank() > 9)
+       return 2;
+   }
+ //post exchange-----------------------------------------------------------------------------------------
+ //------------------------------------------------------------------------------------------------------
+   else
+   {
+     //System.out.println("start of second round betting");
+     players = 0;
+     for (int i = 0; i < table.getSize(); i++)
+     {
+       if(!table.isEmpty(i) && !table.hasFolded(i))
+         players++;
+     }
+     currentPlayers = players;
+     
+     
+     int[] numCardsExchanged = new int[currentPlayers];
+     int index = 0;
+     boolean onlyHighCards = true;
+     for (int i = 0; i < table.getSize(); i++)
+     {
+       if(!table.isEmpty(i) && !table.hasFolded(i))
+       {
+         if (numCardsExchanged[index] < 4)
+         {
+           onlyHighCards = false;
+         }
+         numCardsExchanged[index] = table.getNumCardsExchanged(i);
+         index++;
+       }
+     }
+     
+     //-----------attempts to bluff---------------------------------------------------------------------
+     if (onlyHighCards && firstBetP3 && table.getCall() == 0)
+     {
+       return RAISE;
+     }
+     //---------------------------------------------------------------------------------------------------
+     //-----------Folds if bluff fails and only has high card--------------------------------------------
+      if (handCat == 0)
+     {
+       return FOLD;
+     }
+     //---------------------------------------------------------------------------------------------------
+      
+     double[] stratPercents = new double[3];  //0 is fold, 1 is call, 2 is raise //percent winnings per hand
+     for (int i = 0; i < 3; i++)
+     {
+       stratPercents[i] = 0.0;
+     }
+     
+     int bestStrat = 0;
+     for (int i = 0; i < 3; i++)
+     {
+       TestT fakeTable = new TestT(currentPlayers, myHand,cardsExchangedtoCats(numCardsExchanged), table.getDealer(), table.getPot());
+       TestP3 simulationPlayer = new TestP3(i);
+       fakeTable.setPlayer(0, new TestP(simulationPlayer));
+       for (int seat = 1; seat < currentPlayers; seat++)
+         fakeTable.setPlayer(seat, new TestP(new TestO()));  
+       //created the table with same number of players
+       
+       
+       for(int j = 0; j < 500; j++) //how many rounds to do for each case
+       {
+         fakeTable.secondRoundBet();
+       }  
+       
+       stratPercents[i] = (((double)fakeTable.getPlayer(0).getStack()))/500.0;
+       if (stratPercents[i] > stratPercents[bestStrat])
+       {
+         bestStrat = i;
+       }
+       
+       for(int l = 0; l < currentPlayers; l++) //clears ids
+       {
+         fakeTable.getPlayer(l).releaseID();
+       }
+     }
+     //end of testing all strategys
+     
+     firstBetP3 = false;
+     return bestStrat;
+   }
+   return 1;
+ }
+ 
+ public int[] cardsExchangedtoCats(int[] cardsExchanged)
+ {
+   int[] handCats = new int[cardsExchanged.length];
+   for (int i = 0; i < cardsExchanged.length; i ++)
+   {
+     handCats[i] = cardsExchangedNormCat[cardsExchanged[i]];
+   }
+   return handCats;
+ }
+  
+  public boolean[] exchange()
+  {
+     int players = 0;
+    for (int i = 0; i < table.getSize(); i++)
+    {
+      if(!table.isEmpty(i) && !table.hasFolded(i))
+        players++;
+    }
+    currentPlayers = players;
+    
+      exchanged = true;
+    if (handCat == HIGH_CARD)
+    return new boolean[]{false, true, true, true, true};
+    
+    if (handCat == PAIR)
+    return new boolean[]{false, false, true, true, true};
+    
+     if (handCat == TWO_PAIR)
+    return new boolean[]{false, false, false, false, true};
+     
+      if (handCat == THREE_OF_A_KIND)
+    return new boolean[]{false, false, false, true, true};
+      
+     
+    return new boolean[]{false, false, false, false, false};
+    
+    
+  }
+  
+  public void exchanged(int handCategory, Card[] hand)
+  {
+    myHand=hand;
+    handCat=handCategory;
+  }
+  
+  public void roundEnded()
+  {
+     int roundWinnings = table.getStack(mySeat) - preHandStack;
+    if (roundWinnings < 0)
+    {
+      mltAnte = mltAnte + 1;
+      mltOppons = (mltOppons - roundWinnings) - 1;
+    }
+    else
+    {
+      roundsWon++;
+    }
+    exchanged = false; 
+  }
+  
+    public int getMltAnte()
+  {
+   return mltAnte;
+  }
+  
+  public int getMltOppons()
+  {
+   return mltOppons;
+  }
+  
+  public int getRoundsWon()
+  {
+   return roundsWon;
+  }
+}
