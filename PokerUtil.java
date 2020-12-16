@@ -17,7 +17,7 @@ public class PokerUtil {
     return handCats[handCategory];
   }
 
-  public static int evaluateHand(Card[] hand, Player p)// takes in 7 cards (side effect is hand shortening to 5)
+  public static int evaluateHand(Card[] hand, Player p) // takes in 7 cards (side effect is hand shortening to 5)
   {
     // sorts from highest rank to lowest rank ignoring pairs
     for (int i = 1; i < hand.length; i++) {

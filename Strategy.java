@@ -10,7 +10,7 @@ public interface Strategy {
   public static final int FOUR_OF_A_KIND = 7;
   public static final int STRAIGHT_FLUSH = 8;
 
-  void deal(int seat, int handCategory, Card[] hand, Table t);
+  void deal(int seat, Table t);
 
   int act();
 

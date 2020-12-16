@@ -2,7 +2,6 @@ import java.util.*;
 
 public class MainBots {
   public static void main(String[] args) {
-    boolean testMode = true;
     int numPlayers = 5;
     int numGames = 20000;
 

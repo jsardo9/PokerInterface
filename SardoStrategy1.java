@@ -3,11 +3,13 @@ public class SardoStrategy1 implements Strategy {
   private int mySeat;
   private int handCat;
   private Table table;
-  private boolean exchanged;
-  private int preHandStack;
+
+  // private int round; maybe track current betting round
+
   private int mltAnte;
   private int mltOppons;
   private int roundsWon;
+  private int preHandStack;
 
   public SardoStrategy1() {
     mltAnte = 0;
@@ -15,64 +17,19 @@ public class SardoStrategy1 implements Strategy {
     roundsWon = 0;
   }
 
-  public void deal(int seat, int handCategory, Card[] hand, Table t) {
-    exchanged = false;
-    myHand = hand;
+  public void deal(int seat, Table t) {
     mySeat = seat;
-    handCat = handCategory;
     table = t;
-    preHandStack = table.getPlayer(mySeat).getStack() + 1;
+    myHand = table.getPlayer(mySeat).getHand();
+    preHandStack = table.getPlayer(mySeat).getStack();
   }
 
   public int act() {
-    if (!exchanged) {
-      if (handCat > 1)
-        return 2;
-
-      if (handCat > 0 && myHand[1].getRank() > 9)
-        return 2;
-    } else {
-      if (handCat == 0)
-        return 0;
-
-      if (handCat == 1 && myHand[1].getRank() < 10)
-        return 0;
-
-      if (handCat == 1) {
-        return 1;
-      }
-
-      return 2;
-    }
-
     return 1;
   }
 
-  public boolean[] exchange() {
-    exchanged = true;
-    if (handCat == 0)
-      return new boolean[] { false, true, true, true, true };
-
-    if (handCat == 1)
-      return new boolean[] { false, false, true, true, true };
-
-    if (handCat == 2)
-      return new boolean[] { false, false, false, false, true };
-
-    if (handCat == 3)
-      return new boolean[] { false, false, false, true, true };
-
-    return new boolean[] { false, false, false, false, false };
-
-  }
-
-  public void exchanged(int handCategory, Card[] hand) {
-    myHand = hand;
-    handCat = handCategory;
-  }
-
   public void roundEnded() {
-    int roundWinnings = table.getStack(mySeat) - preHandStack;
+    int roundWinnings = table.getPlayer(mySeat).getStack() - preHandStack;
     if (roundWinnings < 0) {
 
       mltAnte = mltAnte + 1;
@@ -81,7 +38,6 @@ public class SardoStrategy1 implements Strategy {
     } else {
       roundsWon++;
     }
-    exchanged = false;
   }
 
   public int getMltAnte() {

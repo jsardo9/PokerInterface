@@ -3,23 +3,22 @@ import java.util.*;
 public class Player {
   private static Set<Integer> usedIDs = new HashSet<Integer>();
 
-  private Card[] hand; // always stored in sorted order
+  private Card[] hand = null; // always stored in sorted order
+
   private Card[] showDownHand = null; // only learns this during showdown
   private int handCategory = -1; // only learns handcategory during showdown
   private Card[] finalHand = new Card[7];
+
   private int stack; // all the money the player has that is not currently in play
-  private int bet; // money pushed in by player during current betting round
+  private int bet = 0; // money pushed in by player during current betting round
   private Strategy strategy;
-  private boolean folded;
-  private int allIn = -1; // number of chips that can be won by all in player
+  private boolean folded = false;
+  private int allIn = -1; // number of chips that can be won by all in from player (-1 if not all in)
   private int id; // has a unique ID, randomly assigned
 
   public Player(Strategy strat, int stack) {
-    hand = null;
-    bet = 0;
-    this.stack = stack;
     strategy = strat;
-    folded = false;
+    this.stack = stack;
 
     if (usedIDs.size() >= 900)
       throw new RuntimeException("all ID values used");
@@ -81,7 +80,7 @@ public class Player {
 
   // pre: hand and handCategory already up to date
   public void deal(int seat, Table table) {
-    strategy.deal(seat, handCategory, hand, table);
+    strategy.deal(seat, table);
   }
 
   public int act() {

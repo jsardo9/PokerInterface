@@ -2,22 +2,22 @@ import java.util.*;
 
 public class Table {
 
-  private Player[] players;// NEVER LEAVE AN EMPTY SPOT
-  private int pot = 0;
-  private int bigBlind;
+  private Player[] players; // NEVER LEAVES AN EMPTY SPOT
+  private int dealer; // 0 is yourself and rotates left through players[] ???
+  private int activeSeat; // Current acting player
+  private int pot = 0; // Numer of chips currently in the pot
+  private int bigBlind; // Number of chips the big blind costs
   private Card[] deck = new Card[52];
-  private int dealer; // 0 is yourself rotates clockwise around
-  private int activeSeat;
-  private int call = 0; // the maximum amount bet by anyone
   private int deckPlace = 0; // index of next card in deck to be dealt
-  private Card[] board = new Card[5];
+  private int call = 0; // the maximum amount bet by anyone
+  private Card[] board = new Card[5]; // Cards in the center
   private TextDisplay display;
-  private boolean showDown; // true if we're in the showdown, so that strategies can see players' hands
+  private boolean showDown; // true if we're in the showdown
 
   public Table(int numPlayers, int dealer, int bigBlind) {
-    this.bigBlind = bigBlind;
-    players = new Player[numPlayers]; // Never any empty seats
+    players = new Player[numPlayers];
     this.dealer = dealer;
+    this.bigBlind = bigBlind;
 
     for (int i = 0; i < 5; i++) // creates board
     {
@@ -33,6 +33,7 @@ public class Table {
     }
   }
 
+  // Randomly shuffles deck
   public void shuffle() {
     for (int i = 0; i < 52; i++) {
       int index = (int) (Math.random() * (52 - i));
@@ -42,17 +43,20 @@ public class Table {
     }
   }
 
+  // When does this get called?
   public void setDisplay(TextDisplay display) {
     this.display = display;
   }
 
   public void round() {
+    int tempBB = bigBlind;
     if (players.length < 2)
       throw new RuntimeException("not enough players to play:  " + players.length);
 
     activeSeat = (dealer + 1) % players.length; // active player is small blind
-    blinds();
-    // activeSeat is now one after big blind
+
+    blinds(); // Big blind does not reset in some cases
+    // activeSeat is now one after big blind since they start first round of betting
     shuffle();
     deal(); // deal always starts from position 0
     bet(true); // Preflop || not yet tested
@@ -88,7 +92,7 @@ public class Table {
     {
       Player p = players[i];
       if (!p.hasFolded()) {
-        p.setHandCategory(board);// this sets showdownhand also
+        p.setHandCategory(board); // this sets showdownhand also
         if (winningSeats.size() == 0)
           winningSeats.add(i);
         else // winningSeats is at least 1
@@ -97,38 +101,25 @@ public class Table {
             int cat1 = p.getHandCategory();
             int cat2 = players[winningSeats.get(j)].getHandCategory();
             int winner = PokerUtil.getWinner(cat1, p.getShowDownHand(), cat2,
-                players[winningSeats.get(j)].getShowDownHand());// returns1ifhand1won
-            boolean hasMoreOrEqualEquity = true; // false if p1 is all in for less then the pot
-            if (p.getAllIn() != -1) // p is all in
-            {
-              if (players[winningSeats.get(j)].getAllIn() == -1
-                  || p.getAllIn() < players[winningSeats.get(j)].getAllIn())
-                hasMoreOrEqualEquity = false;
-            }
+                players[winningSeats.get(j)].getShowDownHand()); // returns1ifhand1won
+
             if (winner == 1) {
               if (p.getAllIn() == -1) {
                 winningSeats = new ArrayList<Integer>();
                 winningSeats.add(i);
                 j = -1;
-              } else if (hasMoreOrEqualEquity) // better hand and mmore equity
+              } else if (players[winningSeats.get(j)].getAllIn() != -1
+                  && p.getAllIn() > players[winningSeats.get(j)].getAllIn()) // better hand and mmore equity
               {
                 winningSeats.remove(j);
                 winningSeats.add(i);
               } else // best hand but lowest equity
               {
-                winningSeats.add(i);
-                j = -1;
+                winningSeats.add(j, i); // adding in before j
               }
             } else if (winner == 0) // tie
             {
-
-              if (hasMoreOrEqualEquity) {
-                winningSeats.add(winningSeats.get(j));
-                winningSeats.set(j, i);
-              } else {
-                winningSeats.add(i);
-                j = -1;
-              }
+              winningSeats.add(j, i);
             } else {
               j = -1;
             }
@@ -137,19 +128,22 @@ public class Table {
       }
     }
 
-    for (int i = winningSeats.size(); i > -1; i--) {
-      for (int j = i - 1; j > 0; j--) {
-        if (hasMoreOrEqualEquity(players[winningSeats.get(j)], players[winningSeats.get(i)])) // j has more equity
-        {
-          players[winningSeats.get(i)].addChips(players[winningSeats.get(i)].getAllIn()); // difference between i and j
-                                                                                          // is the number of hands that
-                                                                                          // the getAllIn needs to be
-                                                                                          // splt with
-          pot -= players[winningSeats.get(i)].getAllIn();
-        }
+    while (pot != 0) {
+      int numTie = 1;
+      int i = 0;
+      while (i + 1 < winningSeats.size() && PokerUtil.getWinner(players[winningSeats.get(i)].getHandCatagory(),
+          players[winningSeats.get(i)].getShowDownHand(), players[winningSeats.get(i + 1)].getHandCatagory(),
+          players[winningSeats.get(i + 1)].getShowDownHand()) == 0) {
+        numTie++;
+        i++;
       }
+      int reward = pot / numTie;
+      while (i >= 0) {
+        players[winningSeats.get(i)].addChips(reward);
+        i--;
+      }
+      pot = 0;
     }
-    pot = 0;
 
     if (display != null)
       display.update();
@@ -168,20 +162,19 @@ public class Table {
     for (Player p : players) {
       p.unFold();
     }
-  }
 
-  public boolean hasMoreOrEqualEquity(Player a, Player b) {
-    return true;
+    bigBlind = tempBB;
   }
 
   public void blinds() {
     int bbPlayer = (activeSeat + 1) % players.length;
+
     int sbStack = players[activeSeat].getStack();
     int bbStack = players[bbPlayer].getStack();
     if (players[activeSeat].getStack() >= bigBlind / 2) {
       players[activeSeat].removeChips(bigBlind / 2);
       players[activeSeat].setBet(bigBlind / 2);
-    } else {
+    } else { // Case when small blind player cannot cover small blind
       players[activeSeat].setAllIn(players[activeSeat].getStack());
       players[activeSeat].removeChips(players[activeSeat].getStack());
       players[activeSeat].setBet(players[activeSeat].getStack());
@@ -191,7 +184,7 @@ public class Table {
       players[bbPlayer].removeChips(bigBlind);
       players[bbPlayer].setBet(bigBlind);
       activeSeat = (activeSeat + 2) % players.length;
-    } else {
+    } else { // Case when Big blind player cannot cover Big blind
       players[bbPlayer].setAllIn(players[bbPlayer].getStack());
       players[bbPlayer].removeChips(players[bbPlayer].getStack());
       players[bbPlayer].setBet(players[bbPlayer].getStack());
@@ -240,6 +233,7 @@ public class Table {
     int called = 0; // number of players who have called the biggest bet
     if (preflop)
       call = bigBlind;
+
     int playersLeft = getNumActivePlayers(); // number of nunfolded nonAllIn players
     while (called < playersLeft && playersLeft > 1) {
       Player activePlayer = players[activeSeat];
@@ -263,7 +257,7 @@ public class Table {
           }
           if (called == playersLeft) // force player to call if raising into all in player(s)
           {
-            System.out.println("why the fuck are you raising all in players");
+            // System.out.println("All in player getting raised");
             activePlayer.removeChips(call - activePlayer.getBet());
             activePlayer.setBet(call);
           } else {
