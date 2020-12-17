@@ -2,8 +2,9 @@ import java.util.*;
 
 public class MainBots {
   public static void main(String[] args) {
+    boolean testMode = true;
     int numPlayers = 5;
-    int numGames = 20000;
+    int numGames = 100;
 
     Table t = new Table(numPlayers, 0, 2);
 
@@ -20,11 +21,16 @@ public class MainBots {
     for (int i = 0; i < numGames; i++) {
 
       if (i % (numGames * .01) == 0 && testMode) {
-        System.out.println(i);
+        System.out.println("round " + i);
+        for (int k = 0; k < numPlayers; k++) {
+          System.out.println("Seat " + k + " Stack: " + t.getPlayer(k).getStack());
+        }
       }
+
       t.round();
       // System.out.println("end of round");
     }
+
     for (int i = 0; i < numPlayers; i++) {
       System.out.println("Seat " + i + " Stack: " + t.getPlayer(i).getStack());
     }

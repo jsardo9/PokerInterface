@@ -82,8 +82,8 @@ public class PokerUtil {
         newHand[4] = hand[4];
       }
       p.setShowDownHand(newHand);
-      System.out.println(handToString(newHand));
-      System.out.println("FourOfAKind");
+      // System.out.println(handToString(newHand));
+      // System.out.println("FourOfAKind");
       return Strategy.FOUR_OF_A_KIND;
     }
 
@@ -97,8 +97,8 @@ public class PokerUtil {
         newHand[i + 3] = hand[indexOfSecondLargestRow + i];
       }
       p.setShowDownHand(newHand);
-      System.out.println(handToString(newHand));
-      System.out.println("FullHouse");
+      // System.out.println(handToString(newHand));
+      // System.out.println("FullHouse");
       return Strategy.FULL_HOUSE;
     }
 
@@ -162,8 +162,8 @@ public class PokerUtil {
           newHand[i] = hand[indexOfStraight + i];
         }
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("StraightFlush");
+        // System.out.println(handToString(newHand));
+        // System.out.println("StraightFlush");
         return Strategy.STRAIGHT_FLUSH;
       }
     }
@@ -179,8 +179,8 @@ public class PokerUtil {
         }
       }
       p.setShowDownHand(newHand);
-      System.out.println(handToString(newHand));
-      System.out.println("Flush");
+      // System.out.println(handToString(newHand));
+      // System.out.println("Flush");
       return Strategy.FLUSH;
     }
 
@@ -198,8 +198,8 @@ public class PokerUtil {
         }
       }
       p.setShowDownHand(newHand);
-      System.out.println(handToString(newHand));
-      System.out.println("Straight");
+      // System.out.println(handToString(newHand));
+      // System.out.println("Straight");
       return Strategy.STRAIGHT;
     }
 
@@ -214,23 +214,23 @@ public class PokerUtil {
         newHand[3] = hand[0];
         newHand[4] = hand[1];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("threeOfAKind");
+        // System.out.println(handToString(newHand));
+        // System.out.println("threeOfAKind");
         return Strategy.THREE_OF_A_KIND;
       } else if (indexOfLargestRow == 1) {
         newHand[3] = hand[0];
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("threeOfAKind");
+        // System.out.println(handToString(newHand));
+        // System.out.println("threeOfAKind");
         return Strategy.THREE_OF_A_KIND;
       } else // index of largest row is 0
       {
         newHand[3] = hand[3];
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("threeOfAKind");
+        // System.out.println(handToString(newHand));
+        // System.out.println("threeOfAKind");
         return Strategy.THREE_OF_A_KIND;
       }
     }
@@ -247,20 +247,20 @@ public class PokerUtil {
       if (indexOfLargestRow != 0) {
         newHand[4] = hand[0];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("twoPair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("twoPair");
         return Strategy.TWO_PAIR;
       } else if (indexOfSecondLargestRow != 2) {
         newHand[4] = hand[2];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("twoPair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("twoPair");
         return Strategy.TWO_PAIR;
       } else {
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("twoPair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("twoPair");
         return Strategy.TWO_PAIR;
       }
     }
@@ -276,32 +276,32 @@ public class PokerUtil {
         newHand[3] = hand[3];
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("pair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("pair");
         return Strategy.PAIR;
       } else if (indexOfLargestRow == 1) {
         newHand[2] = hand[0];
         newHand[3] = hand[3];
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("pair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("pair");
         return Strategy.PAIR;
       } else if (indexOfLargestRow == 2) {
         newHand[2] = hand[0];
         newHand[3] = hand[1];
         newHand[4] = hand[4];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("pair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("pair");
         return Strategy.PAIR;
       } else {
         newHand[2] = hand[0];
         newHand[3] = hand[1];
         newHand[4] = hand[2];
         p.setShowDownHand(newHand);
-        System.out.println(handToString(newHand));
-        System.out.println("pair");
+        // System.out.println(handToString(newHand));
+        // System.out.println("pair");
         return Strategy.PAIR;
       }
     }
@@ -312,8 +312,8 @@ public class PokerUtil {
       newHand[i] = hand[i];
     }
     p.setShowDownHand(newHand);
-    System.out.println(handToString(newHand));
-    System.out.println("high card");
+    // System.out.println(handToString(newHand));
+    // System.out.println("high card");
     return Strategy.HIGH_CARD;
   }
 

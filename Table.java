@@ -43,7 +43,6 @@ public class Table {
     }
   }
 
-  // When does this get called?
   public void setDisplay(TextDisplay display) {
     this.display = display;
   }
@@ -55,11 +54,14 @@ public class Table {
 
     activeSeat = (dealer + 1) % players.length; // active player is small blind
 
-    blinds(); // Big blind does not reset in some cases
+    blinds();
     // activeSeat is now one after big blind since they start first round of betting
+    System.out.println("Did blinds");
     shuffle();
     deal(); // deal always starts from position 0
+    System.out.println("Did deal");
     bet(true); // Preflop || not yet tested
+    System.out.println("Did Preflop");
 
     if (getNumActivePlayers() > 1) // Flop
     {
@@ -69,18 +71,22 @@ public class Table {
       }
       bet(false);
     }
+
+    System.out.println("Did Flop");
     if (getNumActivePlayers() > 1) // Turn
     {
       board[3] = deck[deckPlace];
       deckPlace++;
       bet(false);
     }
+    System.out.println("Did Turn");
     if (getNumActivePlayers() > 1) // River
     {
       board[4] = deck[deckPlace];
       deckPlace++;
       bet(false);
     }
+    System.out.println("Did River");
 
     showDown = true;
     if (display != null)
@@ -92,6 +98,11 @@ public class Table {
     {
       Player p = players[i];
       if (!p.hasFolded()) {
+        for (int k = 0; k < 5; k++) {
+          if (board[k] == null) {
+            board[k] = new Card(1, 1);
+          }
+        }
         p.setHandCategory(board); // this sets showdownhand also
         if (winningSeats.size() == 0)
           winningSeats.add(i);
@@ -127,12 +138,13 @@ public class Table {
         }
       }
     }
+    System.out.println("Did winning seats");
 
     while (pot != 0) {
       int numTie = 1;
       int i = 0;
-      while (i + 1 < winningSeats.size() && PokerUtil.getWinner(players[winningSeats.get(i)].getHandCatagory(),
-          players[winningSeats.get(i)].getShowDownHand(), players[winningSeats.get(i + 1)].getHandCatagory(),
+      while (i + 1 < winningSeats.size() && PokerUtil.getWinner(players[winningSeats.get(i)].getHandCategory(),
+          players[winningSeats.get(i)].getShowDownHand(), players[winningSeats.get(i + 1)].getHandCategory(),
           players[winningSeats.get(i + 1)].getShowDownHand()) == 0) {
         numTie++;
         i++;
@@ -144,6 +156,8 @@ public class Table {
       }
       pot = 0;
     }
+
+    System.out.println("Did winnings");
 
     if (display != null)
       display.update();
@@ -160,6 +174,9 @@ public class Table {
     dealer = (dealer + 1) % players.length;
 
     for (Player p : players) {
+      if (p.getStack() <= 50) {
+        p.addChips(50);
+      }
       p.unFold();
     }
 
@@ -207,7 +224,7 @@ public class Table {
   public int getNumActivePlayers() {
     int left = 0;
     for (Player p : players) {
-      if (!p.hasFolded() && p.getAllIn() != -1)// not folded and not all in
+      if (!p.hasFolded() && p.getAllIn() != -1 && p.getStack() > 1)// not folded and not all in
         left++;
     }
     return left;
@@ -283,7 +300,7 @@ public class Table {
           activePlayer.setAllIn(pot);
           activePlayer.setBet(option + activePlayer.getBet());
           activePlayer.removeChips(call - activePlayer.getBet());
-          // playersleft--;
+          playersLeft--;
         } else
           throw new RuntimeException("illegal action: probably bet less than the call");
       }

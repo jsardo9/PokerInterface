@@ -25,7 +25,11 @@ public class SardoStrategy1 implements Strategy {
   }
 
   public int act() {
-    return 1;
+    if (table.getPlayer(mySeat).getStack() > table.getCall()) {
+      return table.getCall();
+    } else {
+      return FOLD;
+    }
   }
 
   public void roundEnded() {
