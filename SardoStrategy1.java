@@ -1,115 +1,70 @@
-public class SardoStrategy1 implements Strategy
-{
+import static java.lang.Math.*;
+
+public class SardoStrategy1 implements Strategy {
   private Card[] myHand;
   private int mySeat;
   private int handCat;
-  private TableView table;
-  private boolean exchanged;
-    private int preHandStack;
-      private int mltAnte;
+  private Table table;
+
+  // private int round; maybe track current betting round
+
+  private int mltAnte;
   private int mltOppons;
   private int roundsWon;
+  private int preHandStack;
 
-  public SardoStrategy1()
-  {
+  public SardoStrategy1() {
     mltAnte = 0;
     mltOppons = 0;
     roundsWon = 0;
-  } 
+  }
 
-  public void deal(int seat, int handCategory, Card[] hand, TableView tableView)
-  {
-    exchanged = false;
-    myHand=hand;
-    mySeat=seat;
-    handCat=handCategory;
-    table=tableView;
-     preHandStack = table.getStack(mySeat) + 1;
+  public void deal(int seat, Table t) {
+    mySeat = seat;
+    table = t;
+    myHand = table.getPlayer(mySeat).getHand();
+    preHandStack = table.getPlayer(mySeat).getStack();
   }
-  public int act()
-  {
-    if (!exchanged)
-    {
-    if (handCat > 1)
-      return 2;
-      
-    if (handCat > 0 && myHand[1].getRank() > 9)
-      return 2;
-    }
-    else
-    {
-      if (handCat == 0)
-      return 0;
-      
-      if (handCat == 1 && myHand[1].getRank() < 10)
-        return 0;
-      
-      if (handCat == 1)
-      {
-        return 1;
+
+  public int act() {
+    if (table.getPlayer(mySeat).getStack() > table.getCall()) {
+      if (table.getPlayer(mySeat).getBet() != 0) {
+        return table.getCall() - table.getPlayer(mySeat).getBet();
+      } else {
+        if (table.getCall() > 0 && Math.random() > .6) {
+          return FOLD;
+        } else if (Math.random() > .75) {
+          return table.getCall();
+        } else {
+          return table.getCall() + (int) (Math.random() * 5);
+        }
       }
-      
-      return 2;
+    } else {
+      return FOLD;
     }
-      
-    
-    
-    return 1;
   }
-  public boolean[] exchange()
-  {
-    exchanged = true;
-    if (handCat == 0)
-    return new boolean[]{false, true, true, true, true};
-    
-    if (handCat == 1)
-    return new boolean[]{false, false, true, true, true};
-    
-     if (handCat == 2)
-    return new boolean[]{false, false, false, false, true};
-     
-      if (handCat == 3)
-    return new boolean[]{false, false, false, true, true};
-      
-     
-    return new boolean[]{false, false, false, false, false};
-    
-  }
-  
-  public void exchanged(int handCategory, Card[] hand)
-  {
-    myHand=hand;
-    handCat=handCategory;
-  }
-  public void roundEnded()
-  {
-    int roundWinnings = table.getStack(mySeat) - preHandStack;
-    if (roundWinnings < 0)
-    {
-      
+
+  public void roundEnded() {
+    int roundWinnings = table.getPlayer(mySeat).getStack() - preHandStack;
+    if (roundWinnings < 0) {
+
       mltAnte = mltAnte + 1;
       mltOppons = (mltOppons - roundWinnings) - 1;
-     
-    }
-    else
-    {
+
+    } else {
       roundsWon++;
     }
-    exchanged = false; 
   }
-  
-    public int getMltAnte()
-  {
-   return mltAnte;
+
+  public int getMltAnte() {
+    return mltAnte;
   }
-  
-  public int getMltOppons()
-  {
-   return mltOppons;
+
+  public int getMltOppons() {
+    return mltOppons;
   }
-  
-  public int getRoundsWon()
-  {
-   return roundsWon;
+
+  public int getRoundsWon() {
+    return roundsWon;
   }
 }
