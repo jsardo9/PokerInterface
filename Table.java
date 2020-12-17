@@ -54,17 +54,19 @@ public class Table {
 
     activeSeat = (dealer + 1) % players.length; // active player is small blind
 
+    System.out.println("Collecting Blinds");
     blinds();
     // activeSeat is now one after big blind since they start first round of betting
-    System.out.println("Did blinds");
+    System.out.println("Shuffling Deck");
     shuffle();
+    System.out.println("Dealing Cards");
     deal(); // deal always starts from position 0
-    System.out.println("Did deal");
+    System.out.println("Pre-Flop Betting");
     bet(true); // Preflop || not yet tested
-    System.out.println("Did Preflop");
 
     if (getNumActivePlayers() > 1) // Flop
     {
+      System.out.println("Flop Betting");
       for (int i = 0; i < 3; i++) {
         board[i] = deck[deckPlace];
         deckPlace++;
@@ -72,22 +74,23 @@ public class Table {
       bet(false);
     }
 
-    System.out.println("Did Flop");
     if (getNumActivePlayers() > 1) // Turn
     {
+      System.out.println("Turn Betting");
       board[3] = deck[deckPlace];
       deckPlace++;
       bet(false);
     }
-    System.out.println("Did Turn");
+
     if (getNumActivePlayers() > 1) // River
     {
+      System.out.println("River Betting");
       board[4] = deck[deckPlace];
       deckPlace++;
       bet(false);
     }
-    System.out.println("Did River");
 
+    System.out.println("ShowDown");
     showDown = true;
     if (display != null)
       display.update();
@@ -224,7 +227,7 @@ public class Table {
   public int getNumActivePlayers() {
     int left = 0;
     for (Player p : players) {
-      if (!p.hasFolded() && p.getAllIn() != -1 && p.getStack() > 1)// not folded and not all in
+      if (!p.hasFolded() && p.getAllIn() == -1 && p.getStack() > 1)// not folded and not all in
         left++;
     }
     return left;
