@@ -13,11 +13,12 @@ public class TextDisplay {
 
   public void update() {
     if (hasHuman)
-      System.out.println(table); // use this potentially in future --> || table.getTableView()
+      System.out.println(table.toString(table.showDown())); // use this potentially in future --> ||
+                                                            // table.getTableView()
   }
 
   public int act(Card[] hand) {
-    System.out.println("Your hand: " + PokerUtil.handToString(hand));
+    System.out.println("Your hand: " + PokerUtil.handToString(hand, true));
     System.out.println("Input your action: (f)old, (b)et |amount|");
     String choice;
     do

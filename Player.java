@@ -113,9 +113,9 @@ public class Player {
     return id;
   }
 
-  public String toString() // All information, including hand
+  public String toString(boolean showdown) // All information, including hand
   {
-    return "id#" + id + "||  " + PokerUtil.handToString(hand) + " " + publicToString();
+    return "id#" + id + "||  " + PokerUtil.handToString(hand, showdown) + " " + publicToString();
   }
 
   public String publicToString() {

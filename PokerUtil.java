@@ -2,13 +2,13 @@ public class PokerUtil {
   private static final String[] handCats = { "High Card", "One Pair", "Two Pair", "Three of a Kind", "Straight",
       "Flush", "Full House", "Four of a Kind", "Straight Flush" };
 
-  public static String handToString(Card[] hand) {
+  public static String handToString(Card[] hand, boolean showdown) {
     String str = "";
     for (Card c : hand) {
-      if (c != null)
+      if (c != null && showdown)
         str += c.toString() + " ";
       else
-        str += "- ";
+        str += "-  ";
     }
     return str;
   }

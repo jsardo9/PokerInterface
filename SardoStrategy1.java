@@ -1,3 +1,5 @@
+import static java.lang.Math.*;
+
 public class SardoStrategy1 implements Strategy {
   private Card[] myHand;
   private int mySeat;
@@ -26,7 +28,17 @@ public class SardoStrategy1 implements Strategy {
 
   public int act() {
     if (table.getPlayer(mySeat).getStack() > table.getCall()) {
-      return table.getCall();
+      if (table.getPlayer(mySeat).getBet() != 0) {
+        return table.getCall() - table.getPlayer(mySeat).getBet();
+      } else {
+        if (table.getCall() > 0 && Math.random() > .6) {
+          return FOLD;
+        } else if (Math.random() > .75) {
+          return table.getCall();
+        } else {
+          return table.getCall() + (int) (Math.random() * 5);
+        }
+      }
     } else {
       return FOLD;
     }

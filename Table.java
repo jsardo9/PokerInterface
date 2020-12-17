@@ -141,7 +141,6 @@ public class Table {
         }
       }
     }
-    System.out.println("Did winning seats");
 
     while (pot != 0) {
       int numTie = 1;
@@ -160,10 +159,11 @@ public class Table {
       pot = 0;
     }
 
-    System.out.println("Did winnings");
-
     if (display != null)
-      display.update();
+      System.out.println("Round Results");
+    showDown = true;
+    display.update();
+    showDown = false;
 
     // notify players that round has ended before resetting all for next round
     for (int i = 0; i < players.length; i++) {
@@ -370,8 +370,8 @@ public class Table {
     return players[seat];
   }
 
-  public String toString() {
-    String s = "board: " + PokerUtil.handToString(board) + "\n";
+  public String toString(boolean showdown) {
+    String s = "board: " + PokerUtil.handToString(board, true) + "\n";
     s += "pot:  " + pot + "\n";
     for (int seat = players.length - 1; seat >= 0; seat--)// cycles backwards through players
     {
@@ -388,7 +388,12 @@ public class Table {
       else
         s += " ";
       s += seat + ":";
-      s += players[seat];
+      if (seat != 0) {
+        s += players[seat].toString(showdown);
+      } else {
+        s += players[seat].toString(true);
+      }
+
       s += "\n";
     }
     return s;
