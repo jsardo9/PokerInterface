@@ -37,7 +37,7 @@ public class TextDisplay {
   }
 
   public boolean[] exchange(Card[] hand) {
-    System.out.println("Your hand: " + PokerUtil.handToString(hand));
+    System.out.println("Your hand: " + PokerUtil.handToString(hand, true));
     System.out.println(
         "Which cards would you like to exchange? (0 = none, 2 = last 2 cards, 5 = all cards, x--x- = 1st and 4th)");
     while (true) {
